@@ -286,6 +286,8 @@ const getLessonById = async (req, res) => {
     }
 };
 
+const Quiz = require("../models/quiz");
+
 const updateLesson = async (req, res) => {
     try {
         const { courseId } = req.params;
@@ -295,6 +297,8 @@ const updateLesson = async (req, res) => {
         if (!course) {
             return res.status(404).json({ message: "Course not found." });
         }
+
+        let quizDeleted = false; // Track quiz deletion
 
         if (title) course.title = title;
         if (description) course.description = description;
@@ -310,21 +314,32 @@ const updateLesson = async (req, res) => {
                 course.pdfs = [];
             }
             course.pdfs.push(`/uploads/${req.file.filename}`);
+            course.lastUpdated = Date.now(); // ✅ Update timestamp
         }
 
         // Delete a specific PDF if removePdfUrl is provided
         if (removePdfUrl && course.pdfs) {
+            const originalPdfCount = course.pdfs.length;
             course.pdfs = course.pdfs.filter(pdf => pdf !== removePdfUrl);
+            
+            // If a PDF was actually removed, update timestamp and delete quiz
+            if (course.pdfs.length < originalPdfCount) {
+                course.lastUpdated = Date.now(); // ✅ Update timestamp
+                await Quiz.deleteOne({ lesson_id: courseId }); // ✅ Delete old quiz
+                quizDeleted = true;
+            }
         }
 
         await course.save();
-        res.status(200).json({ message: "Course updated successfully.", course });
+        res.status(200).json({ 
+            message: "Course updated successfully.",
+            quizDeleted: quizDeleted ? "Old quiz removed. Please regenerate." : "No quiz changes.",
+            course 
+        });
     } catch (error) {
         res.status(500).json({ message: "Server error.", error: error.message });
     }
 };
-
-
 
 module.exports = {register,login, addCourse, addLesson, updateCourse, deleteCourse, getAllCourses, getCourseById, deleteLesson, getLessonsByCourse, getLessonById, updateLesson};
 
