@@ -10,7 +10,8 @@ const lessonSchema = new mongoose.Schema({
         type: { type: String, enum: ["video", "pdf", "article", "image", "other"], required: true },
         url: { type: String, required: true }
     }],
-    course: { type: String, ref: 'Course', required: true } // Linking lesson to a course
+    course: { type: String, ref: 'Course', required: true } ,
+    lastUpdated: { type: Date, default: Date.now }// Linking lesson to a course
 });
 
 const Lesson = mongoose.model('Lesson', lessonSchema);
