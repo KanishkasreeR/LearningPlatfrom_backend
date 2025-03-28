@@ -18,9 +18,9 @@ const auth = async (req, res, next) => {
         userId: decoded.userId,  // Assumes payload includes a userId field
         role: decoded.role,
       };
-    } else if (decoded.role === 'tutor') {
+    } else if (decoded.role === 'admin') {
       req.user = {
-        tutorId: decoded.tutorId,  // Assumes payload includes a tutorId field
+        adminId: decoded.adminId,  // Assumes payload includes a tutorId field
         role: decoded.role,
       };
     } else {

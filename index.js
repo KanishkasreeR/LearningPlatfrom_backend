@@ -10,7 +10,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 const userRoutes = require("./routes/userRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 app.use("/user", userRoutes);
+app.use("/admin", adminRoutes);
 
 mongoose
   .connect('mongodb+srv://kanishka:poorani05@cluster05.pgwmpx4.mongodb.net/LearningPlatform?retryWrites=true&w=majority&appName=Cluster05', {

@@ -15,7 +15,7 @@ const UserSchema = new mongoose.Schema({
     validate: [arrayLimit, "Cannot store more than 10 embeddings per person"],
   },
   hasFaceEmbeddings: { type: Boolean, default: false }, // Track if user has embeddings
-  role: { type: String, enum: ["student", "tutor"], required: true, default: "student" },
+  role: { type: String, enum: ["student", "admin"], required: true, default: "student" },
   date_of_birth: { type: Date, default: null },
   gender: { type: String, enum: ["male", "female", "other"], default: "other" },
   attendance: [
