@@ -185,8 +185,148 @@ const addLesson = async (req, res) => {
     });
 };
 
+const updateCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const { title, description } = req.body;
 
-module.exports = {register,login, addCourse, addLesson};
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ message: "Course not found." });
+        }
+
+        if (title) course.title = title;
+        if (description) course.description = description;
+
+        await course.save();
+        res.status(200).json({ message: "Course updated successfully.", course });
+    } catch (error) {
+        res.status(500).json({ message: "Server error.", error: error.message });
+    }
+};
+
+const deleteCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ message: "Course not found." });
+        }
+
+        await Lesson.deleteMany({ course: courseId }); // Delete associated lessons
+        await Course.findByIdAndDelete(courseId);
+
+        res.status(200).json({ message: "Course and associated lessons deleted successfully." });
+    } catch (error) {
+        res.status(500).json({ message: "Server error.", error: error.message });
+    }
+};
+
+const getAllCourses = async (req, res) => {
+    try {
+        const courses = await Course.find();
+        res.status(200).json({ courses });
+    } catch (error) {
+        res.status(500).json({ message: "Server error.", error: error.message });
+    }
+};
+
+const getCourseById = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const course = await Course.findById(courseId).populate("lessons");
+        if (!course) {
+            return res.status(404).json({ message: "Course not found." });
+        }
+        res.status(200).json({ course });
+    } catch (error) {
+        res.status(500).json({ message: "Server error.", error: error.message });
+    }
+};
+
+const deleteLesson = async (req, res) => {
+    try {
+        const { lessonId } = req.params;
+
+        const lesson = await Lesson.findById(lessonId);
+        if (!lesson) {
+            return res.status(404).json({ message: "Lesson not found." });
+        }
+
+        await Lesson.findByIdAndDelete(lessonId);
+        await Course.updateOne({ _id: lesson.course }, { $pull: { lessons: lessonId } });
+
+        res.status(200).json({ message: "Lesson deleted successfully." });
+    } catch (error) {
+        res.status(500).json({ message: "Server error.", error: error.message });
+    }
+};
+
+const getLessonsByCourse = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const lessons = await Lesson.find({ course: courseId });
+        res.status(200).json({ lessons });
+    } catch (error) {
+        res.status(500).json({ message: "Server error.", error: error.message });
+    }
+};
+
+const getLessonById = async (req, res) => {
+    try {
+        const { lessonId } = req.params;
+        const lesson = await Lesson.findById(lessonId);
+        if (!lesson) {
+            return res.status(404).json({ message: "Lesson not found." });
+        }
+        res.status(200).json({ lesson });
+    } catch (error) {
+        res.status(500).json({ message: "Server error.", error: error.message });
+    }
+};
+
+const updateLesson = async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const { title, description, videoUrl, removePdfUrl } = req.body; // removePdfUrl: Specific PDF to delete
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ message: "Course not found." });
+        }
+
+        if (title) course.title = title;
+        if (description) course.description = description;
+
+        // Update video URL if provided
+        if (videoUrl) {
+            course.videoUrl = videoUrl;
+        }
+
+        // If a new PDF is uploaded, add it without deleting old ones
+        if (req.file) {
+            if (!course.pdfs) {
+                course.pdfs = [];
+            }
+            course.pdfs.push(`/uploads/${req.file.filename}`);
+        }
+
+        // Delete a specific PDF if removePdfUrl is provided
+        if (removePdfUrl && course.pdfs) {
+            course.pdfs = course.pdfs.filter(pdf => pdf !== removePdfUrl);
+        }
+
+        await course.save();
+        res.status(200).json({ message: "Course updated successfully.", course });
+    } catch (error) {
+        res.status(500).json({ message: "Server error.", error: error.message });
+    }
+};
+
+
+
+module.exports = {register,login, addCourse, addLesson, updateCourse, deleteCourse, getAllCourses, getCourseById, deleteLesson, getLessonsByCourse, getLessonById, updateLesson};
 
   
   
